@@ -1,0 +1,74 @@
+name: Release trigger (with polling)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  poll_and_trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poll for wasm zip in release assets (max 5 tries)
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            async function delay(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            const maxTries = 5;
+            const intervalMs = 10000; // 10 seconds
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const tag = context.payload.release.tag_name;
+
+            let found = false;
+            for (let attempt = 1; attempt <= maxTries; attempt++) {
+              console.log(`Attempt ${attempt}/${maxTries} to check release assets...`);
+
+              const res = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag
+              });
+
+              const assets = res.data.assets;
+              const wasmAsset = assets.find(asset =>
+                asset.name.toLowerCase().includes("wasm") &&
+                asset.name.toLowerCase().endsWith(".zip")
+              );
+
+              if (wasmAsset) {
+                console.log(`Found wasm asset: ${wasmAsset.name}`);
+                core.setOutput("tag", tag);
+                found = true;
+                break;
+              }
+
+              if (attempt < maxTries) {
+                console.log("Wasm zip not found. Waiting...");
+                await delay(intervalMs);
+              }
+            }
+
+            if (!found) {
+              console.log("Wasm zip not found after max attempts. Will not deploy.");
+              core.setOutput("tag", "");
+            }
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger deploy workflow
+        if: steps.check.outputs.tag != ''
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: deploy-wasm.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: |
+            tag: ${{ steps.check.outputs.tag }}
