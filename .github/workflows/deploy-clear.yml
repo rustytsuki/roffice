@@ -1,0 +1,27 @@
+name: Clear WASM Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  clear_pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create empty site folder
+        run: mkdir site
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload empty artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy empty site
+        uses: actions/deploy-pages@v4

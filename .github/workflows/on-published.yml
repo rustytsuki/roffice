@@ -21,7 +21,7 @@ jobs:
             }
 
             const maxTries = 5;
-            const intervalMs = 10000; // 10 seconds
+            const intervalMs = 60000; // 60 seconds
 
             const owner = context.repo.owner;
             const repo = context.repo.repo;
