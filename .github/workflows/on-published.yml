@@ -46,6 +46,7 @@ jobs:
 
               if (wasmAsset) {
                 console.log(`Found wasm asset: ${wasmAsset.name}`);
+                console.log(`Set current tag: ${tag}`);
                 core.setOutput("tag", tag);
                 found = true;
                 break;
@@ -64,6 +65,10 @@ jobs:
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug print tag before dispatch
+        run: |
+            echo "Tag to pass: ${{ steps.check.outputs.tag }}"
 
       - name: Trigger deploy workflow
         if: steps.check.outputs.tag != ''
