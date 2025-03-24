@@ -1,0 +1,62 @@
+name: Deploy WASM Release to GitHub Pages
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for "wasm" zip asset
+        id: check_asset
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const assets = context.payload.release.assets;
+            const wasmAsset = assets.find(asset =>
+              asset.name.toLowerCase().includes("wasm") &&
+              asset.name.toLowerCase().endsWith(".zip")
+            );
+
+            if (wasmAsset) {
+              core.setOutput("found", "true");
+              core.setOutput("asset_url", wasmAsset.url);
+              core.setOutput("asset_name", wasmAsset.name);
+            } else {
+              core.setOutput("found", "false");
+            }
+
+      - name: Exit if no wasm zip found
+        if: steps.check_asset.outputs.found == 'false'
+        run: |
+          echo "No wasm zip file found in this release. Skipping deployment."
+          exit 0
+
+      - name: Download wasm zip
+        run: |
+          echo "Downloading: ${{ steps.check_asset.outputs.asset_name }}"
+          curl -L -H "Accept: application/octet-stream" \
+               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               "${{ steps.check_asset.outputs.asset_url }}" \
+               -o "${{ steps.check_asset.outputs.asset_name }}"
+
+      - name: Unzip
+        run: |
+          unzip "${{ steps.check_asset.outputs.asset_name }}" -d ./site
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site/wasm32-unknown-emscripten
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
