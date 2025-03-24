@@ -70,5 +70,7 @@ jobs:
         with:
           workflow: deploy-wasm.yml
           token: ${{ secrets.GITHUB_TOKEN }}
-          inputs: |
-            tag: ${{ steps.check.outputs.tag }}
+          inputs-json: |
+            {
+                "tag": "${{ steps.check.outputs.tag }}"
+            }
