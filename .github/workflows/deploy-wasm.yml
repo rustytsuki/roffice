@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create empty site folder
-        run: mkdir site
+        run: mkdir empty_site
 
       - name: Setup GitHub Pages for clearing
         uses: actions/configure-pages@v5
@@ -25,10 +25,13 @@ jobs:
       - name: Upload empty artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./site
+          name: empty-pages
+          path: ./empty_site
 
       - name: Deploy empty site
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: empty-pages
 
       - name: Fetch release by tag
         id: get_release
@@ -76,7 +79,10 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: wasm-pages
           path: ./site/wasm32-unknown-emscripten
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: wasm-pages
