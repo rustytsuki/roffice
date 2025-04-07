@@ -16,6 +16,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Create empty site folder
+        run: mkdir site
+
+      - name: Setup GitHub Pages for clearing
+        uses: actions/configure-pages@v5
+
+      - name: Upload empty artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy empty site
+        uses: actions/deploy-pages@v4
+
       - name: Fetch release by tag
         id: get_release
         uses: actions/github-script@v7
