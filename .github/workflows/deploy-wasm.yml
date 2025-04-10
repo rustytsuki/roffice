@@ -16,22 +16,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Create empty site folder
-        run: mkdir empty_site
-
-      - name: Setup GitHub Pages for clearing
-        uses: actions/configure-pages@v5
-
-      - name: Upload empty artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: empty-pages
-          path: ./empty_site
-
-      - name: Deploy empty site
-        uses: actions/deploy-pages@v4
-        with:
-          artifact_name: empty-pages
+      - name: Call GitHub API to delete Pages site
+        run: |
+          curl -L \
+            -X DELETE \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.ROFFICE_RELEASE }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/pages
 
       - name: Fetch release by tag
         id: get_release
